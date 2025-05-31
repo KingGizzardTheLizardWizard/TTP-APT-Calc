@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Aptitude Progress Calculator</title>
+  <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+  <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 1em;
+      background: #f8f8f8;
+      border-radius: 8px;
+    }
+    label {
+      display: block;
+      margin: 0.6em 0 0.2em;
+    }
+    input {
+      width: 100%;
+      padding: 0.4em;
+      font-size: 1em;
+      box-sizing: border-box;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 1em;
+      padding: 0.6em 1.2em;
+      font-size: 1.1em;
+      border: none;
+      background: #0078d7;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+    pre {
+      margin-top: 1.5em;
+      background: #222;
+      color: #eee;
+      padding: 1em;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Aptitude Progress Calculator</h1>
+
+  <label>Passive Gain per Second (ex. 16.8k):</label>
+  <input id="passive_gain" type="text" placeholder="e.g. 16.8k" />
+
+  <label>RP Shop Cooldown per Click (ex. 0.04):</label>
+  <input id="click_cooldown" type="text" placeholder="e.g. 0.04" />
+
+  <label>Aptitude per Click (ex. 3.3k):</label>
+  <input id="click_gain" type="text" placeholder="e.g. 3.3k" />
+
+  <label>Current Aptitude (ex. 1.74b):</label>
+  <input id="current_aptitude" type="text" placeholder="e.g. 1.74b" />
+
+  <button id="calculate_btn">Calculate</button>
+
+  <pre id="results"></pre>
+
+  <py-script>
+import js
+
+def parse_shorthand_number(s):
+    s = s.strip().lower()
+    multipliers = {'k': 1_000, 'm': 1_000_000, 'b': 1_000_000_000}
+    if not s:
+        raise ValueError("Empty input")
+    if s[-1] in multipliers:
+        return float(s[:-1]) * multipliers[s[-1]]
+    else:
+        return float(s)
+
+def calculate(*args):
+    try:
+        passive_gain = parse_shorthand_number(js.document.getElementById("passive_gain").value)
+        click_cooldown = parse_shorthand_number(js.document.getElementById("click_cooldown").value)
+        click_gain = parse_shorthand_number(js.document.getElementById("click_gain").value)
+        current_aptitude = parse_shorthand_number(js.document.getElementById("current_aptitude").value)
+    except Exception as e:
+        js.document.getElementById("results").innerText = f"Invalid input: {e}"
+        return
+
+    target_aptitude = 5_000_000_000
+    remaining = target_aptitude - current_aptitude
+    if remaining <= 0:
+        js.document.getElementById("results").innerText = "Already reached or surpassed 5 billion aptitude"
+        return
+
+    clicks_per_sec = 1 / click_cooldown if click_cooldown > 0 else 0
+    total_per_sec = passive_gain + clicks_per_sec * click_gain
+
+    if total_per_sec <= 0:
+        js.document.getElementById("results").innerText = "bruh."
+        return
+
+    time_sec = remaining / total_per_sec
+    time_hours = time_sec / 3600
+    aptitude_per_hour = total_per_sec * 3600
+
+    output = f"""Aptitude still needed: {remaining:,.0f}
+Total gain per second (approx.): {total_per_sec:,.2f}
+Aptitude you'll get per hour (ballpark): {aptitude_per_hour:,.0f}
+Estimated time to 5 billion: {time_hours:.2f} hours (give or take)"""
+
+    js.document.getElementById("results").innerText = output
+
+btn = js.document.getElementById("calculate_btn")
+btn.addEventListener("click", calculate)
+  </py-script>
+
+</body>
+</html>
