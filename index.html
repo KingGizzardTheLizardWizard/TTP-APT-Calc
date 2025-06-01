@@ -201,6 +201,11 @@
         <label for="click_cooldown">Click Cooldown (sec):</label>
         <input type="number" step="any" min="0.001" id="click_cooldown" placeholder="ex. 0.04" required>
       </div>
+      <div class="form-group">
+        <label for="target_aptitude">Goal Aptitude:</label>
+        <input type="text" id="target_aptitude" placeholder="ex. 5b, 10,000,000, or 1.5M" required>
+      </div>
+
       <button type="button" onclick="runCalculation()">Calculate</button>
     </form>
     <div id="output">Enter values or upload/paste an image, then click "Calculate".</div>
@@ -340,47 +345,47 @@
       }
     });
 
-    function runCalculation() {
-      const output = document.getElementById('output');
-      let passive_gain = parseShorthandNumber(document.getElementById('passive_gain').value);
-      let click_cooldown = parseFloat(document.getElementById('click_cooldown').value);
-      let click_gain = parseShorthandNumber(document.getElementById('click_gain').value);
-      let current_aptitude = parseShorthandNumber(document.getElementById('current_aptitude').value);
-
-      if ([passive_gain, click_cooldown, click_gain, current_aptitude].some(isNaN)) {
-        output.innerHTML = "Invalid input. Please check your values.";
-        return;
-      }
-
-      const target_aptitude = 5_000_000_000;
-      const remaining_aptitude = target_aptitude - current_aptitude;
-
-      if (remaining_aptitude <= 0) {
-        output.innerHTML = "You've already reached or surpassed 5 billion aptitude!";
-        return;
-      }
-
-      const clicks_per_second = 1 / click_cooldown;
-      const click_aptitude_per_sec = clicks_per_second * click_gain;
-      const total_aptitude_per_sec = passive_gain + click_aptitude_per_sec;
-
-      if (total_aptitude_per_sec <= 0) {
-        output.innerHTML = "bruh. (No progress possible with these values.)";
-        return;
-      }
-
-      const time_seconds = remaining_aptitude / total_aptitude_per_sec;
-      const time_hours = time_seconds / 3600;
-      const aptitude_per_hour = total_aptitude_per_sec * 3600;
-
-      output.innerHTML = `
---- Results ---
-Aptitude still needed: ${Math.round(remaining_aptitude).toLocaleString()}
-Total gain per second (approx.): ${total_aptitude_per_sec.toFixed(2)}
-Aptitude you'll get per hour (ballpark): ${Math.round(aptitude_per_hour).toLocaleString()}
-Estimated time to 5 billion: ${time_hours.toFixed(2)} hours (give or take)
-      `;
-    }
+	function runCalculation() {
+	const output = document.getElementById('output');
+	let passive_gain = parseShorthandNumber(document.getElementById('passive_gain').value);
+	let click_cooldown = parseFloat(document.getElementById('click_cooldown').value);
+	let click_gain = parseShorthandNumber(document.getElementById('click_gain').value);
+	let current_aptitude = parseShorthandNumber(document.getElementById('current_aptitude').value);
+	let target_aptitude = parseShorthandNumber(document.getElementById('target_aptitude').value);
+	
+	if ([passive_gain, click_cooldown, click_gain, current_aptitude, target_aptitude].some(isNaN)) {
+		output.innerHTML = "Invalid input. Please check your values.";
+		return;
+	}
+	
+	const remaining_aptitude = target_aptitude - current_aptitude;
+	
+	if (remaining_aptitude <= 0) {
+		output.innerHTML = "You've already surpassed or reached your goal.";
+		return;
+	}
+	
+	const clicks_per_second = 1 / click_cooldown;
+	const click_aptitude_per_sec = clicks_per_second * click_gain;
+	const total_aptitude_per_sec = passive_gain + click_aptitude_per_sec;
+	
+	if (total_aptitude_per_sec <= 0) {
+		output.innerHTML = "bruh.";
+		return;
+	}
+	
+	const time_seconds = remaining_aptitude / total_aptitude_per_sec;
+	const time_hours = time_seconds / 3600;
+	const aptitude_per_hour = total_aptitude_per_sec * 3600;
+	
+	output.innerHTML = `
+	--- Results ---
+	Aptitude still needed: ${Math.round(remaining_aptitude).toLocaleString()}
+	Total gain per second (approx.): ${total_aptitude_per_sec.toFixed(2)}
+	Aptitude you'll get per hour (ballpark): ${Math.round(aptitude_per_hour).toLocaleString()}
+	Estimated time to goal: ${time_hours.toFixed(2)} hours (give or take)
+	`;
+	}
   </script>
 </body>
 </html>
