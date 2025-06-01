@@ -1,154 +1,355 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Aptitude Progress Calculator</title>
+  <title>Aptitude Progress Calculator (with OCR Demos)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #101010;
+      background: #101010;
       color: #aaa;
       min-height: 100vh;
+      margin: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin: 0;
-      padding: 0;
     }
     .container {
+      background: #151515;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px #0008;
+      padding: 32px 24px 24px 24px;
+      max-width: 540px;
       width: 100%;
-      max-width: 800px;
-      padding: 20px;
-      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
     h1 {
-      margin-bottom: 24px;
       text-align: center;
+      margin-bottom: 24px;
+      font-size: 1.5em;
+      color: #fff;
+      letter-spacing: 1px;
     }
-    #calcForm {
+    .demo-row {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 12px;
+      justify-content: center;
       width: 100%;
-      max-width: 500px;
-      margin-bottom: 20px;
+    }
+    .demo-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .demo-image {
+      display: block;
+      border-radius: 6px;
+      border: 2px solid #252525;
+      background: #202020;
+      max-width: 120px;
+      height: auto;
+      margin-bottom: 0;
+    }
+    .demo-warning {
+      color: #aaa;
+      background: #202020;
+      border: 1px solid #303030;
+      border-radius: 6px;
+      padding: 10px;
+      margin: 10px 0;
+      text-align: center;
+      font-size: 0.95em;
+      max-width: 300px;
+      width: 100%;
+    }
+    form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
     .form-group {
-      margin-bottom: 16px;
-      width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
     }
     label {
       flex: 1;
-      min-width: 240px;
+      min-width: 140px;
       color: #aaa;
-      margin-right: 10px;
+      font-size: 1em;
     }
-    input {
-      padding: 8px;
-      flex: 1;
-      min-width: 120px;
-      max-width: 160px;
-      background-color: #151515;
-      color: #aaa;
+    input[type="text"], input[type="number"] {
+      background: #202020;
+      color: #aaad;
       border: 1px solid #303030;
       border-radius: 4px;
+      padding: 8px;
+      min-width: 0;
+      flex: 1;
+      font-size: 1em;
     }
-    input:focus {
-      outline: none;
-      border-color: #505050;
+    input[type="file"] {
+      color: #aaa;
+      font-size: 1em;
     }
     button {
-      margin-top: 10px;
-      padding: 10px 24px;
-      font-size: 1em;
-      background-color: #151515;
+      background: #202020;
       color: #aaa;
       border: 1px solid #303030;
       border-radius: 4px;
+      padding: 10px 0;
+      font-size: 1.1em;
+      font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.2s;
+      margin-top: 10px;
+      transition: background 0.2s;
       width: 100%;
-      max-width: 500px;
     }
     button:hover {
-      background-color: #252525;
+      background: #252525;
     }
     #output {
+      background: #202020;
+      color: #aaa;
+      border: 1px solid #303030;
+      border-radius: 5px;
+      padding: 20px;
+      margin-top: 18px;
+      width: 100%;
+      min-height: 100px;
       font-family: monospace;
       white-space: pre-wrap;
-      background-color: #202020;
-      color: #aaa;
-      padding: 20px;
-      border-radius: 5px;
-      margin-top: 16px;
-      border: 1px solid #303030;
-      width: 100%;
-      max-width: 500px;
-      min-height: 100px;
+      overflow-x: auto;
       box-sizing: border-box;
-      overflow: auto;
+      text-align: left;
+    }
+    #paste-area {
+      border: 2px dashed #303030;
+      border-radius: 6px;
+      background: #202020;
+      color: #aaa;
+      text-align: center;
+      padding: 12px;
+      margin-bottom: 8px;
+      width: 100%;
+      cursor: pointer;
+      font-size: 0.98em;
+      transition: border-color 0.2s, background 0.2s;
+      min-height: 34px;
+    }
+    #paste-area.paste-hover {
+      border-color: #aaa;
+      background: #252525;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 12px 4px; }
+      h1 { font-size: 1.1em; }
+      .form-group label { min-width: 100px; font-size: 0.95em; }
+      #output { padding: 12px; }
+      #paste-area { padding: 8px; font-size: 0.92em; }
+      .demo-image { max-width: 80px; }
+      .demo-warning { max-width: 220px; font-size: 0.9em; }
+      .demo-row { gap: 8px; }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <div class="container">
     <h1>Aptitude Progress Calculator</h1>
-    <form id="calcForm">
+    <div class="demo-row">
+      <div class="demo-col">
+        <img class="demo-image"
+          src="https://b.catgirlsare.sexy/TGqCSiU_zOFo.png"
+          alt="Scientific Notation Example" width="120">
+      </div>
+      <div class="demo-warning">
+        Paste or upload an image like either of these examples.
+      </div>
+      <div class="demo-col">
+        <img class="demo-image"
+          src="https://b.catgirlsare.sexy/vQG3c8WntyLu.png"
+          alt="Plain Numbers Example" width="120">
+      </div>
+    </div>
+    <div id="paste-area" tabindex="0" title="Paste an image here (Ctrl+V)">
+      <b>Click here and paste (Ctrl+V) an image, or use the upload below</b>
+    </div>
+    <form id="calcForm" autocomplete="off" onsubmit="return false;">
       <div class="form-group">
-        <label for="passive_gain">Passive Gain per Second (ex. 16.8k):</label>
-        <input type="text" id="passive_gain" value="16.8k" required>
+        <label for="imageInput">Upload Screenshot:</label>
+        <input type="file" id="imageInput" accept="image/*">
       </div>
       <div class="form-group">
-        <label for="click_cooldown">RP Shop Cooldown per Click (ex. 0.04):</label>
-        <input type="text" id="click_cooldown" value="0.04" required>
+        <label for="passive_gain">Passive Gain per Second:</label>
+        <input type="text" id="passive_gain" placeholder="ex. 16.8k or 1,266,810" required>
       </div>
       <div class="form-group">
-        <label for="click_gain">Aptitude per Click (ex. 3.3k):</label>
-        <input type="text" id="click_gain" value="3.3k" required>
+        <label for="current_aptitude">Current Aptitude:</label>
+        <input type="text" id="current_aptitude" placeholder="ex. 1.74b or 29,559,973,289" required>
       </div>
       <div class="form-group">
-        <label for="current_aptitude">Current Aptitude (ex. 1.74b):</label>
-        <input type="text" id="current_aptitude" value="1.74b" required>
+        <label for="click_gain">Aptitude per Click:</label>
+        <input type="text" id="click_gain" placeholder="ex. 3.3k or 253,366" required>
+      </div>
+      <div class="form-group">
+        <label for="click_cooldown">Click Cooldown (sec):</label>
+        <input type="number" step="any" min="0.001" id="click_cooldown" placeholder="ex. 0.04" required>
       </div>
       <button type="button" onclick="runCalculation()">Calculate</button>
     </form>
-    <div id="output">Enter values and click "Calculate".</div>
+    <div id="output">Enter values or upload/paste an image, then click "Calculate".</div>
   </div>
-
   <script>
     function parseShorthandNumber(s) {
-      s = s.trim().toLowerCase();
+      if (!s) return NaN;
+      s = s.replace(/,/g, '').trim().toLowerCase();
       const multipliers = {k: 1e3, m: 1e6, b: 1e9};
-      if (s && s.charAt(s.length-1) in multipliers) {
-        return parseFloat(s.slice(0,-1)) * multipliers[s.charAt(s.length-1)];
+      const match = s.match(/^([\d.]+)\s*([kmb])?$/i);
+      if (match) {
+        let num = parseFloat(match[1]);
+        if (match[2]) num *= multipliers[match[2]];
+        return num;
       }
       return parseFloat(s);
     }
 
-    function getInputs() {
-      return {
-        passive_gain: document.getElementById('passive_gain').value,
-        click_cooldown: document.getElementById('click_cooldown').value,
-        click_gain: document.getElementById('click_gain').value,
-        current_aptitude: document.getElementById('current_aptitude').value
+    function preprocessImageForOCR(imageFile, callback) {
+      const img = new Image();
+      const url = typeof imageFile === 'string' ? imageFile : URL.createObjectURL(imageFile);
+      img.onload = function() {
+        const scale = 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          const avg = (data[i] + data[i+1] + data[i+2]) / 3;
+          const contrast = 2; // 1 = no change, >1 = more contrast
+          const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+          const adjust = val => Math.max(0, Math.min(255, factor * (val - 128) + 128));
+          data[i] = data[i+1] = data[i+2] = adjust(avg);
+        }
+        ctx.putImageData(imageData, 0, 0);
+
+        canvas.toBlob(callback, 'image/png');
+        if (typeof imageFile !== 'string') URL.revokeObjectURL(url);
       };
+      img.src = url;
     }
+
+    function extractFieldsFromText(text) {
+      let passiveMatch = text.match(/Passive\s*Aptitude[:\s]*([\d,.]+[kmb]?)/i);
+      if (passiveMatch) {
+        document.getElementById('passive_gain').value = passiveMatch[1];
+      }
+
+      let lines = text.split('\n');
+      let currentApt = '';
+      for (let line of lines) {
+        if (/APTITUDE[:\s]*([\d,.]+[kmb]?)/i.test(line) && !/Passive\s*Aptitude/i.test(line)) {
+          let match = line.match(/APTITUDE[:\s]*([\d,.]+[kmb]?)/i);
+          if (match) {
+            currentApt = match[1];
+            break;
+          }
+        }
+      }
+      if (currentApt) {
+        document.getElementById('current_aptitude').value = currentApt;
+      }
+
+      let clickGain = '';
+      let bracketRegex = /\[?([\d,.kmb]+)\s*[-:]\s*([\d,.kmb]+)\]?/i;
+      for (let i = 0; i < lines.length; ++i) {
+        let bracketMatch = lines[i].match(bracketRegex);
+        if (bracketMatch) {
+          clickGain = bracketMatch[1];
+          break;
+        }
+        if (i + 1 < lines.length) {
+          let combined = lines[i] + lines[i + 1];
+          let combinedMatch = combined.match(bracketRegex);
+          if (combinedMatch) {
+            clickGain = combinedMatch[1];
+            break;
+          }
+        }
+      }
+      if (clickGain) {
+        document.getElementById('click_gain').value = clickGain;
+      }
+    }
+
+    async function handleImageFile(fileOrUrl) {
+      const output = document.getElementById('output');
+      output.innerHTML = "Extracting text from image (OCR)...";
+      preprocessImageForOCR(fileOrUrl, function(blob) {
+        Tesseract.recognize(blob, 'eng', {
+          logger: m => { output.innerHTML = "Extracting text from image (OCR)...<br>" + (m.status === 'recognizing text' ? `Progress: ${(m.progress*100).toFixed(1)}%` : ''); }
+        }).then(result => {
+          let text = result.data.text;
+          output.innerHTML = "OCR Result:<br><pre style='color:#aaa;'>" + text + "</pre>";
+          extractFieldsFromText(text);
+          output.innerHTML += "<br><b>Fields auto-filled! Review and adjust if needed, then click Calculate.</b>";
+        }).catch(err => {
+          output.innerHTML = "OCR failed: " + err;
+        });
+      });
+    }
+
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      handleImageFile(file);
+    });
+
+    const pasteArea = document.getElementById('paste-area');
+    pasteArea.addEventListener('paste', function(e) {
+      let items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          let file = item.getAsFile();
+          handleImageFile(file);
+          e.preventDefault();
+          return;
+        }
+      }
+      document.getElementById('output').innerHTML = "No image found in clipboard. Please copy an image and try again.";
+    });
+    pasteArea.addEventListener('focus', () => pasteArea.classList.add('paste-hover'));
+    pasteArea.addEventListener('blur', () => pasteArea.classList.remove('paste-hover'));
+    pasteArea.addEventListener('mouseenter', () => pasteArea.classList.add('paste-hover'));
+    pasteArea.addEventListener('mouseleave', () => pasteArea.classList.remove('paste-hover'));
+    pasteArea.addEventListener('click', () => pasteArea.focus());
+
+    document.addEventListener('paste', function(e) {
+      let items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          let file = item.getAsFile();
+          handleImageFile(file);
+          e.preventDefault();
+          return;
+        }
+      }
+    });
 
     function runCalculation() {
       const output = document.getElementById('output');
-      output.innerHTML = "Calculating...";
+      let passive_gain = parseShorthandNumber(document.getElementById('passive_gain').value);
+      let click_cooldown = parseFloat(document.getElementById('click_cooldown').value);
+      let click_gain = parseShorthandNumber(document.getElementById('click_gain').value);
+      let current_aptitude = parseShorthandNumber(document.getElementById('current_aptitude').value);
 
-      const inputs = getInputs();
-      let passive_gain, click_cooldown, click_gain, current_aptitude;
-      try {
-        passive_gain = parseShorthandNumber(inputs.passive_gain);
-        click_cooldown = parseShorthandNumber(inputs.click_cooldown);
-        click_gain = parseShorthandNumber(inputs.click_gain);
-        current_aptitude = parseShorthandNumber(inputs.current_aptitude);
-      } catch (e) {
+      if ([passive_gain, click_cooldown, click_gain, current_aptitude].some(isNaN)) {
         output.innerHTML = "Invalid input. Please check your values.";
         return;
       }
